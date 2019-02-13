@@ -4,11 +4,9 @@ import sys
 from datetime import datetime
 from urllib.request import urlopen
 
-
 # subprocess.call('clear', shell=True)
 
 # Ask for input
-
 
 def connection():
     global conn
@@ -40,7 +38,7 @@ def get_wan_ip():
 
 
 connection()
-print("Enter a remote host to scan: ")
+# print("Enter a remote host to scan: ")
 remoteServer = get_wan_ip()
 remoteServerIP = socket.gethostbyname(remoteServer)
 
