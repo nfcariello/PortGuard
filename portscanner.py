@@ -4,61 +4,35 @@ import sys
 from datetime import datetime
 from urllib.request import urlopen
 
+
+# build a basic UI
+# reccomendation
+
 # subprocess.call('clear', shell=True)
 
 # Ask for input
 
-def connection():
-    global conn
-    global cursor
-    conn = sqlite3.connect('port_services.sqlite')
-    cursor = conn.cursor()
 
 
-def querysql(port_import):
-    sql = "SELECT * FROM main.port_information WHERE port = {}".format(port_import)
-    try:
-        cursor.execute(sql)
-        res = cursor.fetchone()
-        try:
-            for r in res:
-                return r
-            print('SQL SUCCESSFUL')
-        except:
-            return 0
-    except sqlite3.Error:
-        conn.rollback()
-        print('SQL FAILED')
-
-
-def get_wan_ip():
-    # get ip from http://ipecho.net/plain as text
-    wan_ip = urlopen('http://ipecho.net/plain').read().decode('utf-8')
-    return wan_ip
-
-
-connection()
 # print("Enter a remote host to scan: ")
-remoteServer = get_wan_ip()
-remoteServerIP = socket.gethostbyname(remoteServer)
 
 
-def startFun():
-    print("Enter the starting port: ")
-    global start
-    start = input()
-    if int(start) < 1 or int(start) > 65535:
-        print("Not an acceptable value")
-        startFun()
-
-
-def endFun():
-    print("Enter the ending port: ")
-    global end
-    end = input()
-    if int(end) < 1 or int(end) > 65535:
-        print("Not an acceptable value")
-        endFun()
+# def startFun():
+#     print("Enter the starting port: ")
+#     global start
+#     start = input()
+#     if int(start) < 1 or int(start) > 65535:
+#         print("Not an acceptable value")
+#         startFun()
+#
+#
+# def endFun():
+#     print("Enter the ending port: ")
+#     global end
+#     end = input()
+#     if int(end) < 1 or int(end) > 65535:
+#         print("Not an acceptable value")
+#         endFun()
 
 
 # Accept starting port
@@ -66,49 +40,11 @@ def endFun():
 # Accept ending port
 # endFun()
 
-start = 1
-end = 65535
 
-# Print a nice banner with information on which host we are about to scan
-print("-" * 60)
-print("Please wait, scanning remote host", remoteServerIP)
-print("Scanning Port(s) " + str(start) + " through " + str(end))
-print("-" * 60)
-
-# Check what time the scan started
-t1 = datetime.now()
-
-# Using the range function to specify ports (here it will scans all ports between 1 and 65535)
-
-# We also put in some error handling for catching errors
-openPorts = 0
-try:
-    for port_scan in range(int(start), int(end)):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        result = sock.connect_ex((remoteServerIP, port_scan))
-        if result == 0:
-            query = querysql(port_scan)
-            openPorts += 1
-            print("Port {0}: 	            Open        Service: {1}".format(port_scan, query))
-        sock.close()
-
-except socket.gaierror:
-    print('Hostname could not be resolved. Exiting')
-    sys.exit()
-
-except socket.error:
-    print("Couldn't connect to server")
-    sys.exit()
-
-# Checking the time again
-t2 = datetime.now()
-
-# Calculates the difference of time, to see how long it took to run the script
-total = t2 - t1
 
 # Printing the information to screen
-print('Scanning Completed in: ', total)
-print('Total Number of Open Ports: ', openPorts)
+# print('Scanning Completed in: ', total)
+# print('Total Number of Open Ports: ', openPorts)
 
 # import logging
 # import scapy.config
