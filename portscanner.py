@@ -17,22 +17,22 @@ from urllib.request import urlopen
 # print("Enter a remote host to scan: ")
 
 
-# def startFun():
-#     print("Enter the starting port: ")
-#     global start
-#     start = input()
-#     if int(start) < 1 or int(start) > 65535:
-#         print("Not an acceptable value")
-#         startFun()
-#
-#
-# def endFun():
-#     print("Enter the ending port: ")
-#     global end
-#     end = input()
-#     if int(end) < 1 or int(end) > 65535:
-#         print("Not an acceptable value")
-#         endFun()
+def startFun():
+    print("Enter the starting port: ")
+    global start
+    start = input()
+    if int(start) < 1 or int(start) > 65535:
+        print("Not an acceptable value")
+        startFun()
+
+
+def endFun():
+    print("Enter the ending port: ")
+    global end
+    end = input()
+    if int(end) < 1 or int(end) > 65535:
+        print("Not an acceptable value")
+        endFun()
 
 
 # Accept starting port

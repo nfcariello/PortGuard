@@ -16,6 +16,11 @@ selected = IntVar()
 
 bar = Progressbar(window, length=200)
 
+failure = 'FAILED'
+running = 'RUNNING'
+completed = 'COMPLETED'
+ready = 'READY'
+
 
 def initial():
     connection()
@@ -46,6 +51,24 @@ def querysql(port_import):
         return -1
 
 
+def startFun():
+    print("Enter the starting port: ")
+    global start
+    start = input()
+    if int(start) < 1 or int(start) > 65535:
+        print("Not an acceptable value")
+        startFun()
+
+
+def endFun():
+    print("Enter the ending port: ")
+    global end
+    end = input()
+    if int(end) < 1 or int(end) > 65535:
+        print("Not an acceptable value")
+        endFun()
+
+
 def get_wan_ip():
     # get ip from http://ipecho.net/plain as text
     try:
@@ -66,17 +89,41 @@ def get_setting():
     return sel
 
 
-def wanScan():
-    remoteServerIP = get_remote_server_ip()
+def set_ip_box(text):
+    ip_box.delete(0, END)
+    ip_box.insert(0, text)
+    return
 
-    start = 1
-    end = 65535
 
+def set_start_port_box(text):
+    start_port_box.delete(0, END)
+    start_port_box.insert(0, text)
+    return
+
+
+def set_end_port_box(text):
+    end_port_box.delete(0, END)
+    end_port_box.insert(0, text)
+    return
+
+
+def set_status_box(text):
+    status_box.delete(0, END)
+    status_box.insert(0, text)
+    return
+
+
+def wanScan(remoteServerIP, start, end):
+    set_status_box(running)
     # Print a nice banner with information on which host we are about to scan
-    print("-" * 60)
-    print("Please wait, scanning remote host", remoteServerIP)
-    print("Scanning Port(s) " + str(start) + " through " + str(end))
-    print("-" * 60)
+    port_results.insert(INSERT, '-' * 60 + '\n')
+    port_results.insert(INSERT, "Please wait, scanning remote host " + remoteServerIP + '\n')
+    # print("Please wait, scanning remote host", remoteServerIP)
+    port_results.insert(INSERT, "Scanning Port(s) " + str(start) + " through " + str(end) + '\n')
+    # print("Scanning Port(s) " + str(start) + " through " + str(end))
+    port_results.insert(INSERT, '-' * 60 + '\n')
+    port_results.update()
+    # print("-" * 60)
 
     # Check what time the scan started
     t1 = datetime.now()
@@ -92,22 +139,32 @@ def wanScan():
             if result == 0:
                 query = querysql(port_scan)
                 if query == -1:
-                    sys.exit('SQL Failed')
+                    port_results.insert(INSERT, 'SQL Failed\n')
+                    set_status_box(failure)
+                    return
+                    # sys.exit('SQL Failed')
                 elif query == 0:
                     query = 'None'
 
                 openPorts += 1
                 port_results.insert(INSERT, "Port {0}:   Open     Service: {1}\n".format(port_scan, query))
+                port_results.update()
                 print("Port {0}:   Open     Service: {1}".format(port_scan, query))
             sock.close()
 
     except socket.gaierror:
         print('Hostname could not be resolved. Exiting')
-        sys.exit()
+        port_results.insert(INSERT, 'Hostname could not be resolved. Exiting\n')
+        set_status_box(failure)
+        return
+        # sys.exit()
 
     except socket.error:
         print("Couldn't connect to server")
-        sys.exit()
+        port_results.insert(INSERT, 'Couldn\'t connect to server\n')
+        set_status_box(failure)
+        return
+        # sys.exit()
 
     # Checking the time again
     t2 = datetime.now()
@@ -115,25 +172,27 @@ def wanScan():
     # Calculates the difference of time, to see how long it took to run the script
     total = t2 - t1
 
+    set_status_box()
 
-status_label = Label(window, text='Status')
+
+status_label = Label(window, text='Status:')
 ip_label = Label(window, text='IP:')
 start_port_label = Label(window, text='Starting Port:')
 end_port_label = Label(window, text='Ending Port:')
 
-status_box = Entry(window,width=15)
-ip_box = Entry(window,width=12)
+status_box = Entry(window, width=15)
+ip_box = Entry(window, width=12)
 start_port_box = Entry(window, width=5)
 end_port_box = Entry(window, width=5)
 
-status_box.grid(column=4, row=1, columnspan=2)
-status_label.grid(column=3, row=1, sticky=W)
-ip_label.grid(column=0, row=1, sticky=W)
-ip_box.grid(column=1, row=1, columnspan=2)
-start_port_label.grid(column=0, row=2, columnspan=2, sticky=W)
-start_port_box.grid(column=2, row=2)
-end_port_label.grid(column=3, row=2, columnspan=2, sticky=W)
-end_port_box.grid(column=5, row=2)
+status_box.grid(column=4, row=2, columnspan=2)
+status_label.grid(column=3, row=2, sticky=W)
+ip_label.grid(column=0, row=2, sticky=W)
+ip_box.grid(column=1, row=2, columnspan=2)
+start_port_label.grid(column=0, row=3, columnspan=2, sticky=W)
+start_port_box.grid(column=2, row=3)
+end_port_label.grid(column=3, row=3, columnspan=2, sticky=W)
+end_port_box.grid(column=5, row=3)
 
 lan_rad = Radiobutton(window, text='LAN', value=1, variable=selected)
 wan_rad = Radiobutton(window, text='WAN', value=2, variable=selected)
@@ -141,27 +200,43 @@ cust_rad = Radiobutton(window, text='Custom', value=3, variable=selected)
 lan_rad.grid(column=0, row=0, columnspan=2)
 wan_rad.grid(column=2, row=0, columnspan=2)
 cust_rad.grid(column=4, row=0, columnspan=2)
-port_results = scrolledtext.ScrolledText(window, width=40, height=10)
-port_results.grid(column=0, row=4, columnspan=6, rowspan=4)
+port_results = scrolledtext.ScrolledText(window, width=60, height=50)
+port_results.grid(column=0, row=5, columnspan=6, rowspan=4)
 
 
 def start():
+    i = ip_box.get()
+    st = start_port_box.get()
+    en = end_port_box.get()
+    wanScan(i, st, en)
+
+
+def startSetting():
     setting = get_setting()
     if setting == 1:
         print('LAN Search')
-        port_results.insert(INSERT, 'LAN Search\n')
+        # port_results.insert(INSERT, 'LAN Search\n')
     elif setting == 2:
         print('WAN Search')
-        port_results.insert(INSERT, 'WAN Search\n')
-        wanScan()
+        # port_results.insert(INSERT, 'WAN Search\n')
+        ip = get_remote_server_ip()
+        start = 1
+        end = 65535
+        set_ip_box(ip)
+        set_start_port_box(start)
+        set_end_port_box(end)
     elif setting == 3:
         print('Custom IP')
-        port_results.insert(INSERT, 'Custom IP\n')
+        # port_results.insert(INSERT, 'Custom IP\n')
     else:
         print('NOPE')
 
 
+btn = Button(window, text="Select", command=startSetting)
+btn.grid(column=2, row=1, columnspan=2)
+
 btn = Button(window, text="Scan", command=start)
-btn.grid(column=2, row=3, columnspan=2)
+btn.grid(column=2, row=4, columnspan=2)
 connection()
+set_status_box(ready)
 window.mainloop()
