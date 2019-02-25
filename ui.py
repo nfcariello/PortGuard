@@ -6,6 +6,7 @@ import sqlite3
 import sys
 from datetime import datetime
 from urllib.request import urlopen
+import time
 
 window = Tk()
 window.title("PortGuard")
@@ -14,7 +15,7 @@ window.geometry('500x500')
 
 selected = IntVar()
 
-bar = Progressbar(window, length=200)
+bar = Progressbar(window, length=100)
 
 failure = 'FAILED'
 running = 'RUNNING'
@@ -69,13 +70,22 @@ def endFun():
         endFun()
 
 
+def progress_math():
+    sp = int(get_start_port_box())
+    ep = int(get_end_port_box())
+
+    frac = ep - sp + 1
+    res = 100 / frac
+    return res
+
+
 def get_wan_ip():
     # get ip from http://ipecho.net/plain as text
     try:
         wan_ip = urlopen('http://ipecho.net/plain').read().decode('utf-8')
         return wan_ip
     except:
-        sys.exit('WAN Retrieval Failure')
+        return '0.0.0.0'
 
 
 def get_remote_server_ip():
@@ -93,6 +103,16 @@ def set_ip_box(text):
     ip_box.delete(0, END)
     ip_box.insert(0, text)
     return
+
+
+def get_start_port_box():
+    sp = start_port_box.get()
+    return sp
+
+
+def get_end_port_box():
+    ep = end_port_box.get()
+    return ep
 
 
 def set_start_port_box(text):
@@ -129,6 +149,7 @@ def wanScan(remoteServerIP, start, end):
     t1 = datetime.now()
 
     # Using the range function to specify ports (here it will scans all ports between 1 and 65535)
+    res = progress_math()
 
     # We also put in some error handling for catching errors
     openPorts = 0
@@ -136,6 +157,8 @@ def wanScan(remoteServerIP, start, end):
         for port_scan in range(int(start), int(end)):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             result = sock.connect_ex((remoteServerIP, port_scan))
+            bar['value'] += res
+            bar.update()
             if result == 0:
                 query = querysql(port_scan)
                 if query == -1:
@@ -148,8 +171,9 @@ def wanScan(remoteServerIP, start, end):
 
                 openPorts += 1
                 port_results.insert(INSERT, "Port {0}:   Open     Service: {1}\n".format(port_scan, query))
+                time.sleep(1)
                 port_results.update()
-                print("Port {0}:   Open     Service: {1}".format(port_scan, query))
+                print("Port {0}:    Open     Service: {1}".format(port_scan, query))
             sock.close()
 
     except socket.gaierror:
@@ -180,8 +204,8 @@ ip_label = Label(window, text='IP:')
 start_port_label = Label(window, text='Starting Port:')
 end_port_label = Label(window, text='Ending Port:')
 
-status_box = Entry(window, width=15)
-ip_box = Entry(window, width=12)
+status_box = Entry(window, width=15, state='disabled')
+ip_box = Entry(window, width=16)
 start_port_box = Entry(window, width=5)
 end_port_box = Entry(window, width=5)
 
@@ -200,15 +224,18 @@ cust_rad = Radiobutton(window, text='Custom', value=3, variable=selected)
 lan_rad.grid(column=0, row=0, columnspan=2)
 wan_rad.grid(column=2, row=0, columnspan=2)
 cust_rad.grid(column=4, row=0, columnspan=2)
-port_results = scrolledtext.ScrolledText(window, width=60, height=50)
+port_results = scrolledtext.ScrolledText(window, width=60, height=20)
 port_results.grid(column=0, row=5, columnspan=6, rowspan=4)
+bar.grid(column=0, row=10, columnspan=6)
 
 
 def start():
     i = ip_box.get()
     st = start_port_box.get()
     en = end_port_box.get()
+    disable_inputs()
     wanScan(i, st, en)
+    enable_inputs()
 
 
 def startSetting():
@@ -232,11 +259,37 @@ def startSetting():
         print('NOPE')
 
 
-btn = Button(window, text="Select", command=startSetting)
-btn.grid(column=2, row=1, columnspan=2)
+def cancel():
+    print('Does nothing')
+    # TODO Implement cancel functionality
 
-btn = Button(window, text="Scan", command=start)
-btn.grid(column=2, row=4, columnspan=2)
+
+cancel = Button(window, text="Cancel", command=cancel, state='disabled')
+cancel.grid(column=4, row=4, columnspan=2)
+
+select = Button(window, text="Select", command=startSetting)
+select.grid(column=2, row=1, columnspan=2)
+
+scan = Button(window, text="Scan", command=start)
+scan.grid(column=1, row=4, columnspan=2)
+
+
+def disable_inputs():
+    ip_box['state'] = 'disabled'
+    start_port_box['state'] = 'disabled'
+    end_port_box['state'] = 'disabled'
+    scan['state'] = 'disabled'
+    cancel['state'] = 'normal'
+
+
+def enable_inputs():
+    ip_box['state'] = 'normal'
+    start_port_box['state'] = 'normal'
+    end_port_box['state'] = 'normal'
+    scan['state'] = 'normal'
+    cancel['state'] = 'disabled'
+
+
 connection()
 set_status_box(ready)
 window.mainloop()
