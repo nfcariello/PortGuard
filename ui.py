@@ -172,7 +172,7 @@ def wanScan(remoteServerIP, start, end):
     # Calculates the difference of time, to see how long it took to run the script
     total = t2 - t1
 
-    set_status_box()
+    set_status_box(completed)
 
 
 status_label = Label(window, text='Status:')
