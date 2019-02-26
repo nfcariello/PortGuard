@@ -11,7 +11,7 @@ import time
 window = Tk()
 window.title("PortGuard")
 
-window.geometry('500x500')
+window.geometry('450x500')
 
 selected = IntVar()
 
@@ -273,14 +273,22 @@ def cancel():
     # TODO Implement cancel functionality
 
 
+# TODO enable a CLEAR button and functionality
+
+# TODO add a 'reset' for after a search
+
+# TODO add a functionality after search to return results, (num of open ports, time took, risk calculated)
+
+# TODO re-implement the getting of information from the SQL server, want to return ALL information, not just service name
+
 cancel = Button(window, text="Cancel", command=cancel, state='disabled')
-cancel.grid(column=4, row=4, columnspan=2)
+cancel.grid(column=2, row=4, sticky=E, columnspan=2)
 
 select = Button(window, text="Select", command=startSetting)
 select.grid(column=2, row=1, columnspan=2)
 
 scan = Button(window, text="Scan", command=start)
-scan.grid(column=1, row=4, columnspan=2)
+scan.grid(column=2, row=4, sticky=W, columnspan=2)
 
 
 def disable_inputs():
