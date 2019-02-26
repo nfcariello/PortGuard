@@ -15,7 +15,7 @@ window.geometry('500x500')
 
 selected = IntVar()
 
-bar = Progressbar(window, length=100)
+bar = Progressbar(window, length=400)
 
 failure = 'FAILED'
 running = 'RUNNING'
@@ -128,9 +128,19 @@ def set_end_port_box(text):
 
 
 def set_status_box(text):
+    enable_status_box()
     status_box.delete(0, END)
     status_box.insert(0, text)
+    disable_status_box()
     return
+
+
+def enable_status_box():
+    status_box['state'] = 'normal'
+
+
+def disable_status_box():
+    status_box['state'] = 'disabled'
 
 
 def wanScan(remoteServerIP, start, end):
@@ -195,7 +205,7 @@ def wanScan(remoteServerIP, start, end):
 
     # Calculates the difference of time, to see how long it took to run the script
     total = t2 - t1
-
+    enable_inputs()
     set_status_box(completed)
 
 
@@ -235,7 +245,6 @@ def start():
     en = end_port_box.get()
     disable_inputs()
     wanScan(i, st, en)
-    enable_inputs()
 
 
 def startSetting():
@@ -279,6 +288,10 @@ def disable_inputs():
     start_port_box['state'] = 'disabled'
     end_port_box['state'] = 'disabled'
     scan['state'] = 'disabled'
+    select['state'] = 'disabled'
+    lan_rad['state'] = 'disabled'
+    wan_rad['state'] = 'disabled'
+    cust_rad['state'] = 'disabled'
     cancel['state'] = 'normal'
 
 
@@ -287,6 +300,10 @@ def enable_inputs():
     start_port_box['state'] = 'normal'
     end_port_box['state'] = 'normal'
     scan['state'] = 'normal'
+    select['state'] = 'normal'
+    lan_rad['state'] = 'normal'
+    wan_rad['state'] = 'normal'
+    cust_rad['state'] = 'normal'
     cancel['state'] = 'disabled'
 
 
