@@ -43,7 +43,7 @@ def querysql(port_import):
         try:
             # return res
             for r in res:
-                return r
+                return r,
             # print('SQL SUCCESSFUL')
         except:
             return 0
@@ -209,6 +209,8 @@ def wanScan(remoteServerIP, start, end):
     set_status_box(completed)
 
 
+# UI Components
+
 status_label = Label(window, text='Status:')
 ip_label = Label(window, text='IP:')
 start_port_label = Label(window, text='Starting Port:')
@@ -239,12 +241,48 @@ port_results.grid(column=0, row=5, columnspan=6, rowspan=4)
 bar.grid(column=0, row=10, columnspan=6)
 
 
+def check_ip(ip):
+    try:
+        socket.inet_aton(ip)
+    except socket.error:
+        return -1
+
+
+def check_port(start_port, end_port):
+    if start_port == '' or end_port == '':
+        return -1
+    else:
+        if end_port > start_port:
+            return -1
+        else:
+            if start_port > 65535 or start_port < 0:
+                return -1
+            else:
+                if end_port > 65535 or start_port < 0:
+                    return -1
+                else:
+                    return 0
+
+# TODO Fix this so that you can't pass bad values
+
+# TODO Make it so that the output dialog does not allow input
+
+# TODO Explore using a chart instead of a text box
+
+
 def start():
     i = ip_box.get()
     st = start_port_box.get()
     en = end_port_box.get()
-    disable_inputs()
-    wanScan(i, st, en)
+    cp = check_port(st, en)
+    cip = check_ip(i)
+
+    if cp == -1 | cip == -1:
+        print('nope')
+        return
+    else:
+        disable_inputs()
+        wanScan(i, st, en)
 
 
 def startSetting():
@@ -269,7 +307,7 @@ def startSetting():
 
 
 def cancel():
-    print('Does nothing')
+    print('Does nothing sorry :(')
     # TODO Implement cancel functionality
 
 
