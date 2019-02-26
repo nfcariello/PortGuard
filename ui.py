@@ -281,6 +281,10 @@ def cancel():
 
 # TODO re-implement the getting of information from the SQL server, want to return ALL information, not just service name
 
+# TODO split the UI and port scanning into individual files
+
+# TODO Implement the LAN functionality (with IP, Open Port, etc.) Basically adds a field
+
 cancel = Button(window, text="Cancel", command=cancel, state='disabled')
 cancel.grid(column=2, row=4, sticky=E, columnspan=2)
 
