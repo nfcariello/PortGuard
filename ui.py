@@ -23,10 +23,6 @@ completed = 'COMPLETED'
 ready = 'READY'
 
 
-def initial():
-    connection()
-
-
 def connection():
     global conn
     global cursor
@@ -35,15 +31,16 @@ def connection():
 
 
 def querysql(port_import):
-    sql = "SELECT * FROM main.port_information WHERE port = {}".format(port_import)
+    sql = "SELECT DISTINCT * FROM main.port_information WHERE port = {}".format(port_import)
     try:
         cursor.execute(sql)
-        # res = cursor.fetchall()  # Get all matching entries
-        res = cursor.fetchone()  # Get the first matching entry
+        res = cursor.fetchall()  # Get all matching entries
+        # res = cursor.fetchone()  # Get the first matching entry
         try:
-            # return res
-            for r in res:
-                return r,
+            return res
+            # for r in res:
+            #     print(r)
+            #     return r
             # print('SQL SUCCESSFUL')
         except:
             return 0
@@ -146,11 +143,13 @@ def disable_status_box():
 def wanScan(remoteServerIP, start, end):
     set_status_box(running)
     # Print a nice banner with information on which host we are about to scan
-    port_results.insert(INSERT, '-' * 60 + '\n')
+    port_results.insert(INSERT, '*' * 60 + '\n')
     port_results.insert(INSERT, "Please wait, scanning remote host " + remoteServerIP + '\n')
     # print("Please wait, scanning remote host", remoteServerIP)
     port_results.insert(INSERT, "Scanning Port(s) " + str(start) + " through " + str(end) + '\n')
     # print("Scanning Port(s) " + str(start) + " through " + str(end))
+    port_results.insert(INSERT, '*' * 60 + '\n')
+    port_results.insert(INSERT, 'Port   Status  Service        Protocol   Vulnerability\n')
     port_results.insert(INSERT, '-' * 60 + '\n')
     port_results.update()
     # print("-" * 60)
@@ -180,10 +179,14 @@ def wanScan(remoteServerIP, start, end):
                     query = 'None'
 
                 openPorts += 1
-                port_results.insert(INSERT, "Port {0}:   Open     Service: {1}\n".format(port_scan, query))
-                time.sleep(1)
-                port_results.update()
-                print("Port {0}:    Open     Service: {1}".format(port_scan, query))
+                for r in query:
+                    port_results.insert(INSERT,
+                                        "{0}   Open    {1}       {2}        {3}\n".format(port_scan, r[0], r[2],
+                                                                                           r[3]))
+                    time.sleep(1)
+                    port_results.update()
+                    print('Port: {0}     Status: Open    Service: {1}     Protocol: {2}    Vulnerability: {3}'.format(
+                        port_scan, r[0], r[2], r[3]))
             sock.close()
 
     except socket.gaierror:
@@ -244,6 +247,7 @@ bar.grid(column=0, row=10, columnspan=6)
 def check_ip(ip):
     try:
         socket.inet_aton(ip)
+        return 0
     except socket.error:
         return -1
 
@@ -252,16 +256,17 @@ def check_port(start_port, end_port):
     if start_port == '' or end_port == '':
         return -1
     else:
-        if end_port > start_port:
+        if end_port < start_port:
             return -1
         else:
-            if start_port > 65535 or start_port < 0:
+            if int(start_port) > 65535 or int(start_port) < 0:
                 return -1
             else:
-                if end_port > 65535 or start_port < 0:
+                if int(end_port) > 65535 or int(start_port) < 0:
                     return -1
                 else:
                     return 0
+
 
 # TODO Fix this so that you can't pass bad values
 
