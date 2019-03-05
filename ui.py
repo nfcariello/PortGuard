@@ -139,6 +139,7 @@ def enable_status_box():
 def disable_status_box():
     status_box['state'] = 'disabled'
 
+#TODO CAtch cant reach host
 
 def wanScan(remoteServerIP, start, end):
     set_status_box(running)
@@ -182,12 +183,14 @@ def wanScan(remoteServerIP, start, end):
                 for r in query:
                     port_results.insert(INSERT,
                                         "{0}   Open    {1}       {2}        {3}\n".format(port_scan, r[0], r[2],
-                                                                                           r[3]))
+                                                                                          r[3]))
                     time.sleep(1)
                     port_results.update()
                     print('Port: {0}     Status: Open    Service: {1}     Protocol: {2}    Vulnerability: {3}'.format(
                         port_scan, r[0], r[2], r[3]))
             sock.close()
+        port_results.insert(INSERT, '*' * 60)
+        port_results.insert(INSERT, 'COMPLETE')
 
     except socket.gaierror:
         print('Hostname could not be resolved. Exiting')
