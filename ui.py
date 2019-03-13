@@ -139,9 +139,10 @@ def enable_status_box():
 def disable_status_box():
     status_box['state'] = 'disabled'
 
-#TODO CAtch cant reach host
 
-def wanScan(remoteServerIP, start, end):
+# TODO Catch cant reach host
+
+def wan_scan(remoteServerIP, start, end):
     set_status_box(running)
     # Print a nice banner with information on which host we are about to scan
     port_results.insert(INSERT, '*' * 60 + '\n')
@@ -162,7 +163,7 @@ def wanScan(remoteServerIP, start, end):
     res = progress_math()
 
     # We also put in some error handling for catching errors
-    openPorts = 0
+    open_ports = 0
     try:
         for port_scan in range(int(start), int(end)):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -179,7 +180,7 @@ def wanScan(remoteServerIP, start, end):
                 elif query == 0:
                     query = 'None'
 
-                openPorts += 1
+                open_ports += 1
                 for r in query:
                     port_results.insert(INSERT,
                                         "{0}   Open    {1}       {2}        {3}\n".format(port_scan, r[0], r[2],
@@ -290,10 +291,10 @@ def start():
         return
     else:
         disable_inputs()
-        wanScan(i, st, en)
+        wan_scan(i, st, en)
 
 
-def startSetting():
+def start_setting():
     setting = get_setting()
     if setting == 1:
         print('LAN Search')
@@ -334,7 +335,7 @@ def cancel():
 cancel = Button(window, text="Cancel", command=cancel, state='disabled')
 cancel.grid(column=2, row=4, sticky=E, columnspan=2)
 
-select = Button(window, text="Select", command=startSetting)
+select = Button(window, text="Select", command=start_setting)
 select.grid(column=2, row=1, columnspan=2)
 
 scan = Button(window, text="Scan", command=start)
