@@ -4,14 +4,16 @@ from tkinter.ttk import Progressbar
 import socket
 import sqlite3
 import sys
+import requests
 from datetime import datetime
 from urllib.request import urlopen
 import time
+from tkinter.ttk import *
 
 window = Tk()
 window.title("PortGuard")
 
-window.geometry('450x500')
+window.geometry('650x550')
 
 selected = IntVar()
 
@@ -145,15 +147,15 @@ def disable_status_box():
 def wan_scan(remoteServerIP, start, end):
     set_status_box(running)
     # Print a nice banner with information on which host we are about to scan
-    port_results.insert(INSERT, '*' * 60 + '\n')
-    port_results.insert(INSERT, "Please wait, scanning remote host " + remoteServerIP + '\n')
+    ui_console.insert(INSERT, '*' * 60 + '\n')
+    ui_console.insert(INSERT, "Please wait, scanning remote host " + remoteServerIP + '\n')
     # print("Please wait, scanning remote host", remoteServerIP)
-    port_results.insert(INSERT, "Scanning Port(s) " + str(start) + " through " + str(end) + '\n')
+    ui_console.insert(INSERT, "Scanning Port(s) " + str(start) + " through " + str(end) + '\n')
     # print("Scanning Port(s) " + str(start) + " through " + str(end))
-    port_results.insert(INSERT, '*' * 60 + '\n')
-    port_results.insert(INSERT, 'Port   Status  Service        Protocol   Vulnerability\n')
-    port_results.insert(INSERT, '-' * 60 + '\n')
-    port_results.update()
+    ui_console.insert(INSERT, '*' * 60 + '\n')
+    # port_results.insert(INSERT, 'Port   Status  Service                  Protocol   Vulnerability\n')
+    # port_results.insert(INSERT, '-' * 60 + '\n')
+    ui_console.update()
     # print("-" * 60)
 
     # Check what time the scan started
@@ -168,12 +170,14 @@ def wan_scan(remoteServerIP, start, end):
         for port_scan in range(int(start), int(end)):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             result = sock.connect_ex((remoteServerIP, port_scan))
+            # cp_res = connected_ports(remoteServerIP, port_scan)
             bar['value'] += res
             bar.update()
+
             if result == 0:
                 query = querysql(port_scan)
                 if query == -1:
-                    port_results.insert(INSERT, 'SQL Failed\n')
+                    ui_console.insert(INSERT, 'SQL Failed\n')
                     set_status_box(failure)
                     return
                     # sys.exit('SQL Failed')
@@ -182,27 +186,25 @@ def wan_scan(remoteServerIP, start, end):
 
                 open_ports += 1
                 for r in query:
-                    port_results.insert(INSERT,
-                                        "{0}   Open    {1}       {2}        {3}\n".format(port_scan, r[0], r[2],
-                                                                                          r[3]))
+                    insert_into_tree(port_scan, r[0], r[2], r[3])
                     time.sleep(1)
-                    port_results.update()
-                    print('Port: {0}     Status: Open    Service: {1}     Protocol: {2}    Vulnerability: {3}'.format(
-                        port_scan, r[0], r[2], r[3]))
+                    ui_console.update()
+                    # print(
+                    #     'Port: {0}     Status: Open    Service: {1}              Protocol: {2}     Vulnerability: {3}'.format(
+                    #         port_scan, r[0], r[2], r[3]))
             sock.close()
-        port_results.insert(INSERT, '*' * 60)
-        port_results.insert(INSERT, 'COMPLETE')
+        ui_console.insert(INSERT, 'COMPLETE')
 
     except socket.gaierror:
         print('Hostname could not be resolved. Exiting')
-        port_results.insert(INSERT, 'Hostname could not be resolved. Exiting\n')
+        ui_console.insert(INSERT, 'Hostname could not be resolved. Exiting\n')
         set_status_box(failure)
         return
         # sys.exit()
 
     except socket.error:
         print("Couldn't connect to server")
-        port_results.insert(INSERT, 'Couldn\'t connect to server\n')
+        ui_console.insert(INSERT, 'Couldn\'t connect to server\n')
         set_status_box(failure)
         return
         # sys.exit()
@@ -243,9 +245,45 @@ cust_rad = Radiobutton(window, text='Custom', value=3, variable=selected)
 lan_rad.grid(column=0, row=0, columnspan=2)
 wan_rad.grid(column=2, row=0, columnspan=2)
 cust_rad.grid(column=4, row=0, columnspan=2)
-port_results = scrolledtext.ScrolledText(window, width=60, height=20)
-port_results.grid(column=0, row=5, columnspan=6, rowspan=4)
-bar.grid(column=0, row=10, columnspan=6)
+ui_console = scrolledtext.ScrolledText(window, width=85, height=5)
+ui_console.grid(column=0, row=5, columnspan=6, rowspan=4)
+port_results = Treeview(window)
+port_results.grid(column=0, row=9, columnspan=6, rowspan=4)
+bar.grid(column=0, row=15, columnspan=6)
+port_results['columns'] = ('status', 'service', 'protocol', 'vulnerability')
+port_results.heading("#0", text='Port', anchor='w')
+port_results.column("#0", anchor="center", width=13)
+port_results.heading('status', text='Status')
+port_results.column('status', anchor='center', width=20)
+port_results.heading('service', text='Service')
+port_results.column('service', anchor='center', width=100)
+port_results.heading('protocol', text='Protocol')
+port_results.column('protocol', anchor='center', width=10)
+port_results.heading('vulnerability', text='Vulnerability')
+port_results.column('vulnerability', anchor='center', width=100)
+port_results.grid(sticky=(N, S, W, E))
+
+
+def connected_ports(ip, port):
+    print("-Testing port connection from the internet to %s:%s..." % (ip, port))
+    data = {
+        'remoteHost': ip,
+        'start_port': port,
+        'end_port': port,
+        'scan_type': 'connect',
+        'normalScan': 'Yes',
+    }
+
+    output = requests.post('http://www.ipfingerprints.com/scripts/getPortsInfo.php', data=data)
+    if 'open ' in output.text:
+        return output
+    else:
+        print("port is closed.")
+        return False
+
+
+def insert_into_tree(port, service, protocol, vulnerability):
+    port_results.insert('', 'end', text=port, values=('OPEN', service, protocol, vulnerability))
 
 
 def check_ip(ip):
@@ -276,8 +314,6 @@ def check_port(start_port, end_port):
 
 # TODO Make it so that the output dialog does not allow input
 
-# TODO Explore using a chart instead of a text box
-
 
 def start():
     i = ip_box.get()
@@ -286,6 +322,7 @@ def start():
     cp = check_port(st, en)
     cip = check_ip(i)
 
+    # TODO Fix this it should be able accept any domain
     if cp == -1 | cip == -1:
         print('nope')
         return
@@ -317,6 +354,7 @@ def start_setting():
 
 def cancel():
     print('Does nothing sorry :(')
+
     # TODO Implement cancel functionality
 
 
@@ -326,11 +364,13 @@ def cancel():
 
 # TODO add a functionality after search to return results, (num of open ports, time took, risk calculated)
 
-# TODO re-implement the getting of information from the SQL server, want to return ALL information, not just service name
-
 # TODO split the UI and port scanning into individual files
 
 # TODO Implement the LAN functionality (with IP, Open Port, etc.) Basically adds a field
+
+# TODO Simplify UI to just allow for the entering of the IP
+
+# TODO Confirm that the program is actually scanning the external IP but I have a feeling it doesn't, I added a function that calls a PHP script but it slows down majorly
 
 cancel = Button(window, text="Cancel", command=cancel, state='disabled')
 cancel.grid(column=2, row=4, sticky=E, columnspan=2)
