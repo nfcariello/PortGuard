@@ -4,6 +4,8 @@ from tkinter.ttk import Progressbar
 import socket
 import sqlite3
 import sys
+
+import iptools as iptools
 import requests
 from datetime import datetime
 from urllib.request import urlopen
@@ -51,22 +53,22 @@ def querysql(port_import):
         return -1
 
 
-def startFun():
-    print("Enter the starting port: ")
-    global start
-    start = input()
-    if int(start) < 1 or int(start) > 65535:
-        print("Not an acceptable value")
-        startFun()
-
-
-def endFun():
-    print("Enter the ending port: ")
-    global end
-    end = input()
-    if int(end) < 1 or int(end) > 65535:
-        print("Not an acceptable value")
-        endFun()
+# def startFun():
+#     print("Enter the starting port: ")
+#     global start
+#     start = input()
+#     if int(start) < 1 or int(start) > 65535:
+#         print("Not an acceptable value")
+#         startFun()
+#
+#
+# def endFun():
+#     print("Enter the ending port: ")
+#     global end
+#     end = input()
+#     if int(end) < 1 or int(end) > 65535:
+#         print("Not an acceptable value")
+#         endFun()
 
 
 def progress_math():
@@ -190,7 +192,8 @@ def wan_scan(remoteServerIP, start, end):
                     time.sleep(1)
                     ui_console.update()
                     # print(
-                    #     'Port: {0}     Status: Open    Service: {1}              Protocol: {2}     Vulnerability: {3}'.format(
+                    #     'Port: {0}     Status: Open    Service: {1}              Protocol: {2}
+                    # Vulnerability: {3}'.format(
                     #         port_scan, r[0], r[2], r[3]))
             sock.close()
         ui_console.insert(INSERT, 'COMPLETE')
@@ -287,10 +290,9 @@ def insert_into_tree(port, service, protocol, vulnerability):
 
 
 def check_ip(ip):
-    try:
-        socket.inet_aton(ip)
+    if iptools.ipv4.validate_ip(ip):
         return 0
-    except socket.error:
+    else:
         return -1
 
 
