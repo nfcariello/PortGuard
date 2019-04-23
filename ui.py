@@ -155,6 +155,7 @@ def wan_scan(remoteServerIP, start, end):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             result = sock.connect_ex((remoteServerIP, port_scan))
             # cp_res = connected_ports(remoteServerIP, port_scan)
+            # TODO Fix progress bar as it does not work, or sometimes hangs the program
             bar['value'] += res
             bar.update()
 
@@ -278,20 +279,33 @@ def check_ip(ip):
         return -1
 
 
+# def check_port(start_port, end_port):
+#     if start_port == '' or end_port == '':
+#         return -1
+#     else:
+#         if end_port < start_port:
+#             return -1
+#         else:
+#             if int(start_port) > 65535 or int(start_port) < 0:
+#                 return -1
+#             else:
+#                 if int(end_port) > 65535 or int(start_port) < 0:
+#                     return -1
+#                 else:
+#                     return 0
+
+
 def check_port(start_port, end_port):
     if start_port == '' or end_port == '':
         return -1
+    elif end_port < start_port:
+        return -1
+    elif int(start_port) > 65535 or int(start_port) < 0:
+        return -1
+    elif int(end_port) > 65535 or int(start_port) < 0:
+        return -1
     else:
-        if end_port < start_port:
-            return -1
-        else:
-            if int(start_port) > 65535 or int(start_port) < 0:
-                return -1
-            else:
-                if int(end_port) > 65535 or int(start_port) < 0:
-                    return -1
-                else:
-                    return 0
+        return 0
 
 
 # TODO Fix this so that you can't pass bad values
@@ -308,7 +322,6 @@ def start():
 
     # TODO Fix this it should be able accept any domain
     if cp == -1 | cip == -1:
-        print('nope')
         return
     else:
         disable_inputs()

@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def long2net(arg):
-    if (arg <= 0 or arg >= 0xFFFFFFFF):
+    if arg <= 0 or arg >= 0xFFFFFFFF:
         raise ValueError("illegal netmask value", hex(arg))
     return 32 - int(round(math.log(0xFFFFFFFF - arg, 2)))
 
@@ -23,7 +23,6 @@ def to_CIDR_notation(bytes_network, bytes_netmask):
     if netmask < 16:
         logger.warn("%s is too big. skipping" % net)
         return None
-
     return net
 
 
