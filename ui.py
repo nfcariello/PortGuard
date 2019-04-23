@@ -27,25 +27,22 @@ completed = 'COMPLETED'
 ready = 'READY'
 
 
-def connection():
-    global conn
-    global cursor
-    conn = sqlite3.connect('port_services.sqlite')
-    cursor = conn.cursor()
-
-
 def querysql(port_import):
+    # Prepare SQL Statement to select the port information
     sql = "SELECT DISTINCT * FROM main.port_information WHERE port = {}".format(port_import)
+    # Define the connection to the database for the vulnerabilities
+    conn = sqlite3.connect('port_services.sqlite')
+    # Set a cursor for the connection
+    cursor = conn.cursor()
+    # Try to execute the SQL statement in the database
     try:
         cursor.execute(sql)
-        res = cursor.fetchall()  # Get all matching entries
+        # Fetch all results from the database
+        result = cursor.fetchall()  # Get all matching entries
         # res = cursor.fetchone()  # Get the first matching entry
         try:
-            return res
-            # for r in res:
-            #     print(r)
-            #     return r
-            # print('SQL SUCCESSFUL')
+            # Return the result
+            return result
         except:
             return 0
     except sqlite3.Error:
@@ -66,6 +63,7 @@ def get_wan_ip():
     # get ip from http://ipecho.net/plain as text
     try:
         wan_ip = urlopen('http://ipecho.net/plain').read().decode('utf-8')
+        print(wan_ip)
         return wan_ip
     except:
         return '0.0.0.0'
@@ -133,14 +131,9 @@ def wan_scan(remoteServerIP, start, end):
     # Print a nice banner with information on which host we are about to scan
     ui_console.insert(INSERT, '*' * 60 + '\n')
     ui_console.insert(INSERT, "Please wait, scanning remote host " + remoteServerIP + '\n')
-    # print("Please wait, scanning remote host", remoteServerIP)
     ui_console.insert(INSERT, "Scanning Port(s) " + str(start) + " through " + str(end) + '\n')
-    # print("Scanning Port(s) " + str(start) + " through " + str(end))
     ui_console.insert(INSERT, '*' * 60 + '\n')
-    # port_results.insert(INSERT, 'Port   Status  Service                  Protocol   Vulnerability\n')
-    # port_results.insert(INSERT, '-' * 60 + '\n')
     ui_console.update()
-    # print("-" * 60)
 
     # Check what time the scan started
     t1 = datetime.now()
@@ -154,7 +147,7 @@ def wan_scan(remoteServerIP, start, end):
         for port_scan in range(int(start), int(end)):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             result = sock.connect_ex((remoteServerIP, port_scan))
-            # cp_res = connected_ports(remoteServerIP, port_scan)
+            cp_res = connected_ports(remoteServerIP, port_scan)
             # TODO Fix progress bar as it does not work, or sometimes hangs the program
             bar['value'] += res
             bar.update()
@@ -179,11 +172,11 @@ def wan_scan(remoteServerIP, start, end):
                     # Vulnerability: {3}'.format(
                     #         port_scan, r[0], r[2], r[3]))
             sock.close()
-        ui_console.insert(INSERT, 'COMPLETE')
+        ui_console.insert(INSERT, 'SCAN COMPLETE\n')
 
     except socket.gaierror:
         print('Hostname could not be resolved. Exiting')
-        ui_console.insert(INSERT, 'Hostname could not be resolved. Exiting\n')
+        ui_console.insert(INSERT, 'Hostname could not be resolved.\n')
         set_status_box(failure)
         return
         # sys.exit()
@@ -200,6 +193,7 @@ def wan_scan(remoteServerIP, start, end):
 
     # Calculates the difference of time, to see how long it took to run the script
     total = t2 - t1
+    print(total)
     enable_inputs()
     set_status_box(completed)
 
@@ -250,6 +244,13 @@ port_results.column('vulnerability', anchor='center', width=100)
 port_results.grid(sticky=(N, S, W, E))
 
 
+# TODO Add a UI Reset when the user presses search again
+
+# TODO Remove custom IP.. doesn't make sense
+
+# TODO Change to a tabbed pane maybe, so that you can go from Single IP Scan (Supports WAN)
+# TODO Make a page for scanning a network, return the ip and devices on the network like Fing, and then scan those IPs
+
 def connected_ports(ip, port):
     print("-Testing port connection from the internet to %s:%s..." % (ip, port))
     data = {
@@ -277,22 +278,6 @@ def check_ip(ip):
         return 0
     else:
         return -1
-
-
-# def check_port(start_port, end_port):
-#     if start_port == '' or end_port == '':
-#         return -1
-#     else:
-#         if end_port < start_port:
-#             return -1
-#         else:
-#             if int(start_port) > 65535 or int(start_port) < 0:
-#                 return -1
-#             else:
-#                 if int(end_port) > 65535 or int(start_port) < 0:
-#                     return -1
-#                 else:
-#                     return 0
 
 
 def check_port(start_port, end_port):
@@ -403,6 +388,6 @@ def enable_inputs():
     cancel['state'] = 'disabled'
 
 
-connection()
-set_status_box(ready)
-window.mainloop()
+if __name__ == '__main__':
+    set_status_box(ready)
+    window.mainloop()
