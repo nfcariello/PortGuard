@@ -4,7 +4,7 @@ from tkinter.ttk import Progressbar
 import socket
 import sqlite3
 import sys
-
+import map_network as map
 import iptools as iptools
 import requests
 from datetime import datetime
@@ -124,13 +124,17 @@ def disable_status_box():
     status_box['state'] = 'disabled'
 
 
+def lan_scan(ips, start, end):
+    print('Preparing to scan ' + str(ips) + ' from ports: ' + str(start) + ' to ' + str(end))
+
+
 # TODO Catch cant reach host
 
-def wan_scan(remoteServerIP, start, end):
+def wan_scan(remote_ip, start, end):
     set_status_box(running)
     # Print a nice banner with information on which host we are about to scan
     ui_console.insert(INSERT, '*' * 60 + '\n')
-    ui_console.insert(INSERT, "Please wait, scanning remote host " + remoteServerIP + '\n')
+    ui_console.insert(INSERT, "Please wait, scanning remote host " + remote_ip + '\n')
     ui_console.insert(INSERT, "Scanning Port(s) " + str(start) + " through " + str(end) + '\n')
     ui_console.insert(INSERT, '*' * 60 + '\n')
     ui_console.update()
@@ -146,8 +150,8 @@ def wan_scan(remoteServerIP, start, end):
     try:
         for port_scan in range(int(start), int(end)):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            result = sock.connect_ex((remoteServerIP, port_scan))
-            cp_res = connected_ports(remoteServerIP, port_scan)
+            result = sock.connect_ex((remote_ip, port_scan))
+            cp_res = connected_ports(remote_ip, port_scan)
             # TODO Fix progress bar as it does not work, or sometimes hangs the program
             bar['value'] += res
             bar.update()
@@ -318,6 +322,8 @@ def start_setting():
     if setting == 1:
         print('LAN Search')
         # port_results.insert(INSERT, 'LAN Search\n')
+        ips = map.map_network()
+        lan_scan(ips, 1, 65535)
     elif setting == 2:
         print('WAN Search')
         # port_results.insert(INSERT, 'WAN Search\n')
