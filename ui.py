@@ -1,3 +1,4 @@
+import tkinter as tk
 from tkinter import *
 from tkinter import scrolledtext
 from tkinter.ttk import Progressbar
@@ -125,6 +126,8 @@ def disable_status_box():
 
 
 def lan_scan(ips, start, end):
+    ui_console.insert(INSERT, '*' * 60 + '\n')
+    ui_console.insert(INSERT, "Please wait, scanning network for connected devices " + '\n')
     print('Preparing to scan ' + str(ips) + ' from ports: ' + str(start) + ' to ' + str(end))
     print('jk lol')
 
@@ -199,6 +202,66 @@ def wan_scan(remote_ip, start, end):
     set_status_box(completed)
 
 
+class Page(tk.Frame):
+    def __init__(self, *args, **kwargs):
+        tk.Frame.__init__(self, *args, **kwargs)
+
+    def show(self):
+        self.lift()
+
+
+class Page1(Page):
+    def __init__(self, *args, **kwargs):
+        Page.__init__(self, *args, **kwargs)
+        label = tk.Label(self, text="This is page 1")
+        wan = tk.Button(self, text="Scan my External IP")
+        lan = tk.Button(self, text="Scan my Internal Network")
+        label.pack(side="top", fill="both", expand=True)
+        wan.pack(side="top", fill="both", expand=True, command="p2.show")
+        lan.pack(side="top", fill="both", expand=True)
+
+
+class Page2(Page):
+    def __init__(self, *args, **kwargs):
+        Page.__init__(self, *args, **kwargs)
+        label = tk.Label(self, text="This is page 2")
+        label.pack(side="top", fill="both", expand=True)
+
+
+class Page3(Page):
+    def __init__(self, *args, **kwargs):
+        Page.__init__(self, *args, **kwargs)
+        label = tk.Label(self, text="This is page 3")
+        label.pack(side="top", fill="both", expand=True)
+
+
+class MainView(tk.Frame):
+    def __init__(self, *args, **kwargs):
+        tk.Frame.__init__(self, *args, **kwargs)
+        p1 = Page1(self)
+        p2 = Page2(self)
+        p3 = Page3(self)
+
+        # buttonframe = tk.Frame(self)
+        container = tk.Frame(self)
+        # buttonframe.pack(side="top", fill="x", expand=False)
+        container.pack(side="top", fill="both", expand=True)
+
+        p1.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
+        p2.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
+        p3.place(in_=container, x=0, y=0, relwidth=1, relheight=1)
+
+        # b1 = tk.Button(buttonframe, text="Page 1", command=p1.lift)
+        # b2 = tk.Button(buttonframe, text="Page 2", command=p2.lift)
+        # b3 = tk.Button(buttonframe, text="Page 3", command=p3.lift)
+
+        # b1.pack(side="left")
+        # b2.pack(side="left")
+        # b3.pack(side="left")
+
+        p1.show()
+
+
 # UI Components
 
 status_label = Label(window, text='Status:')
@@ -222,15 +285,13 @@ end_port_box.grid(column=5, row=3)
 
 lan_rad = Radiobutton(window, text='LAN', value=1, variable=selected)
 wan_rad = Radiobutton(window, text='WAN', value=2, variable=selected)
-cust_rad = Radiobutton(window, text='Custom', value=3, variable=selected)
 lan_rad.grid(column=0, row=0, columnspan=2)
-wan_rad.grid(column=2, row=0, columnspan=2)
-cust_rad.grid(column=4, row=0, columnspan=2)
-ui_console = scrolledtext.ScrolledText(window, width=85, height=5)
+wan_rad.grid(column=4, row=0, columnspan=2)
+ui_console = scrolledtext.ScrolledText(window, width=85, height=7)
 ui_console.grid(column=0, row=5, columnspan=6, rowspan=4)
 port_results = Treeview(window)
-port_results.grid(column=0, row=9, columnspan=6, rowspan=4)
-bar.grid(column=0, row=15, columnspan=6)
+port_results.grid(column=0, row=9, columnspan=6, rowspan=7)
+bar.grid(column=0, row=18, columnspan=6)
 port_results['columns'] = ('port', 'status', 'service', 'protocol', 'vulnerability')
 port_results.heading("#0", text='IP', anchor='w')
 port_results.column("#0", anchor="center", width=20)
@@ -312,6 +373,7 @@ def start():
     if cp == -1 | cip == -1:
         return
     else:
+        # TODO sort by type of scan here
         disable_inputs()
         wan_scan(i, st, en)
 
@@ -322,7 +384,7 @@ def start_setting():
         print('LAN Search')
         # port_results.insert(INSERT, 'LAN Search\n')
         ips = map.map_network()
-        lan_scan(ips, 1, 65535)
+        lan_scan(ips)
     elif setting == 2:
         print('WAN Search')
         # port_results.insert(INSERT, 'WAN Search\n')
@@ -332,9 +394,6 @@ def start_setting():
         set_ip_box(ip)
         set_start_port_box(start)
         set_end_port_box(end)
-    elif setting == 3:
-        print('Custom IP')
-        # port_results.insert(INSERT, 'Custom IP\n')
     else:
         print('NOPE')
 
@@ -353,11 +412,7 @@ def cancel():
 
 # TODO split the UI and port scanning into individual files
 
-# TODO Implement the LAN functionality (with IP, Open Port, etc.) Basically adds a field
-
 # TODO Simplify UI to just allow for the entering of the IP
-
-# TODO Confirm that the program is actually scanning the external IP but I have a feeling it doesn't, I added a function that calls a PHP script but it slows down majorly
 
 cancel = Button(window, text="Cancel", command=cancel, state='disabled')
 cancel.grid(column=2, row=4, sticky=E, columnspan=2)
@@ -377,7 +432,6 @@ def disable_inputs():
     select['state'] = 'disabled'
     lan_rad['state'] = 'disabled'
     wan_rad['state'] = 'disabled'
-    cust_rad['state'] = 'disabled'
     cancel['state'] = 'normal'
 
 
@@ -389,10 +443,14 @@ def enable_inputs():
     select['state'] = 'normal'
     lan_rad['state'] = 'normal'
     wan_rad['state'] = 'normal'
-    cust_rad['state'] = 'normal'
     cancel['state'] = 'disabled'
 
 
 if __name__ == '__main__':
+    root = tk.Tk()
+    main = MainView(root)
+    main.pack(side="top", fill="both", expand=True)
+    root.wm_geometry("400x400")
+    root.mainloop()
     set_status_box(ready)
     window.mainloop()
