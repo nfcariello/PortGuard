@@ -126,6 +126,7 @@ def disable_status_box():
 
 def lan_scan(ips, start, end):
     print('Preparing to scan ' + str(ips) + ' from ports: ' + str(start) + ' to ' + str(end))
+    print('jk lol')
 
 
 # TODO Catch cant reach host
@@ -151,7 +152,7 @@ def wan_scan(remote_ip, start, end):
         for port_scan in range(int(start), int(end)):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             result = sock.connect_ex((remote_ip, port_scan))
-            cp_res = connected_ports(remote_ip, port_scan)
+            # cp_res = connected_ports(remote_ip, port_scan)
             # TODO Fix progress bar as it does not work, or sometimes hangs the program
             bar['value'] += res
             bar.update()
@@ -168,13 +169,9 @@ def wan_scan(remote_ip, start, end):
 
                 open_ports += 1
                 for r in query:
-                    insert_into_tree(port_scan, r[0], r[2], r[3])
+                    insert_into_tree(remote_ip, port_scan, r[0], r[2], r[3])
                     time.sleep(1)
                     ui_console.update()
-                    # print(
-                    #     'Port: {0}     Status: Open    Service: {1}              Protocol: {2}
-                    # Vulnerability: {3}'.format(
-                    #         port_scan, r[0], r[2], r[3]))
             sock.close()
         ui_console.insert(INSERT, 'SCAN COMPLETE\n')
 
@@ -234,9 +231,11 @@ ui_console.grid(column=0, row=5, columnspan=6, rowspan=4)
 port_results = Treeview(window)
 port_results.grid(column=0, row=9, columnspan=6, rowspan=4)
 bar.grid(column=0, row=15, columnspan=6)
-port_results['columns'] = ('status', 'service', 'protocol', 'vulnerability')
-port_results.heading("#0", text='Port', anchor='w')
-port_results.column("#0", anchor="center", width=13)
+port_results['columns'] = ('port', 'status', 'service', 'protocol', 'vulnerability')
+port_results.heading("#0", text='IP', anchor='w')
+port_results.column("#0", anchor="center", width=20)
+port_results.heading('port', text='Port')
+port_results.column('port', anchor='center', width=13)
 port_results.heading('status', text='Status')
 port_results.column('status', anchor='center', width=20)
 port_results.heading('service', text='Service')
@@ -273,8 +272,8 @@ def connected_ports(ip, port):
         return False
 
 
-def insert_into_tree(port, service, protocol, vulnerability):
-    port_results.insert('', 'end', text=port, values=('OPEN', service, protocol, vulnerability))
+def insert_into_tree(ip, port, service, protocol, vulnerability):
+    port_results.insert('', 'end', text=ip, values=(port, 'OPEN', service, protocol, vulnerability))
 
 
 def check_ip(ip):
