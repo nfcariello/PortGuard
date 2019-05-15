@@ -18,6 +18,7 @@ failure = 'FAILED'
 running = 'RUNNING'
 completed = 'COMPLETED'
 ready = 'READY'
+getting_devices = 'GETTING DEVICES'
 
 
 def get_wan_ip():
@@ -90,10 +91,9 @@ class PageOne(tk.Frame):
         label = tk.Label(self, text="Scan My Network", font=LARGE_FONT)
         label.pack(pady=10, padx=10)
 
-        return_home = tk.Button(self, text="Back to Home", pady='5', command=lambda: controller.show_frame(StartPage))
-        return_home.pack()
-
         bar = ttk.Progressbar(self, length=500)
+
+        iplist = []
 
         def reset_ui_for_search():
             bar['value'] = 0
@@ -123,6 +123,9 @@ class PageOne(tk.Frame):
 
         def insert_into_tree(ip, port, service, protocol, vulnerability):
             port_results.insert('', 'end', text=ip, values=(port, 'OPEN', service, protocol, vulnerability))
+
+        def insert_into_network_devices(ip):
+            ip_devices.insert('', 'end', text=ip, values=('',))
 
         def check_port(start_port, end_port):
             if start_port == '' or end_port == '':
@@ -169,17 +172,17 @@ class PageOne(tk.Frame):
 
         def start_multi_search():
             reset_ui_for_search()
-            ips = get_ip_list()
             start = start_port_box.get()
             end = end_port_box.get()
             disable_inputs()
             set_status_box(running)
-            iterate_lan_scan(ips, start, end)
+            iterate_lan_scan(iplist, start, end)
             set_status_box(completed)
             enable_inputs()
 
-        def iterate_lan_scan(iplist, start, end):
-            for ip in iplist:
+        def iterate_lan_scan(ip_list, start, end):
+            print(ip_list)
+            for ip in ip_list:
                 lan_scan(ip, start, end)
 
         def set_start_port_box(text):
@@ -204,6 +207,15 @@ class PageOne(tk.Frame):
             status_box.insert(0, text)
             disable_status_box()
             return
+
+        def insert_network_devices():
+            set_status_box(getting_devices)
+            get_internal_ip()
+            ips = get_ip_list()
+            iplist.extend(ips)
+            for ip in ips:
+                insert_into_network_devices(ip)
+            set_status_box(ready)
 
         def check_ip(ip):
             if iptools.ipv4.validate_ip(ip):
@@ -323,19 +335,33 @@ class PageOne(tk.Frame):
         start_single_scan = tk.Button(self, text="Start Single Scan", pady='8', command=start_single_search)
         start_single_scan.place(x=380, y=280)
 
+        ip_devices_label = Label(self, text='Network Devices:')
+        ip_devices_label.place(x=10, y=10)
+
+        ip_devices = ttk.Treeview(self)
+        ip_devices.place(x=10, y=35)
+        ip_devices['columns'] = ('scanned',)
+        ip_devices.heading("#0", text='IP', anchor='w')
+        ip_devices.column("#0", anchor="center", width=120)
+        ip_devices.heading('scanned', text='Scan?')
+        ip_devices.column('scanned', anchor='center', width=40)
+
+        ip_devices_get = Button(self, text="Get Network Devices", pady='8', command=insert_network_devices)
+        ip_devices_get.place(x=20, y=250)
+
         port_results = ttk.Treeview(self)
-        port_results.pack(fill=X, padx='10', side='bottom')
+        port_results.pack(fill=X, padx='7', side='bottom')
         port_results['columns'] = ('port', 'status', 'service', 'protocol', 'vulnerability')
         port_results.heading("#0", text='IP', anchor='w')
-        port_results.column("#0", anchor="center", width=20)
+        port_results.column("#0", anchor="center", width=60)
         port_results.heading('port', text='Port')
-        port_results.column('port', anchor='center', width=13)
+        port_results.column('port', anchor='center', width=2)
         port_results.heading('status', text='Status')
-        port_results.column('status', anchor='center', width=20)
+        port_results.column('status', anchor='center', width=4)
         port_results.heading('service', text='Service')
-        port_results.column('service', anchor='center', width=100)
+        port_results.column('service', anchor='center', width=90)
         port_results.heading('protocol', text='Protocol')
-        port_results.column('protocol', anchor='center', width=10)
+        port_results.column('protocol', anchor='center', width=4)
         port_results.heading('vulnerability', text='Vulnerability')
         port_results.column('vulnerability', anchor='center', width=100)
         bar.pack(side='bottom', after=port_results, pady='5')
