@@ -140,15 +140,17 @@ class PageOne(tk.Frame):
             ip_box['state'] = 'disabled'
             start_port_box['state'] = 'disabled'
             end_port_box['state'] = 'disabled'
-            start_scan['state'] = 'disabled'
+            start_single_scan['state'] = 'disabled'
+            start_multi_scan['state'] = 'disabled'
 
         def enable_inputs():
             ip_box['state'] = 'normal'
             start_port_box['state'] = 'normal'
             end_port_box['state'] = 'normal'
-            start_scan['state'] = 'normal'
+            start_single_scan['state'] = 'normal'
+            start_multi_scan['state'] = 'normal'
 
-        def start():
+        def start_single_search():
             reset_ui_for_search()
             i = ip_box.get()
             st = start_port_box.get()
@@ -160,19 +162,25 @@ class PageOne(tk.Frame):
                 return
             else:
                 disable_inputs()
-                wan_scan(i, st, en)
+                set_status_box(running)
+                lan_scan(i, st, en)
+                set_status_box(completed)
+                enable_inputs()
 
-        def start_multi():
+        def start_multi_search():
             reset_ui_for_search()
-            st = start_port_box.get()
-            en = end_port_box.get()
-            cp = check_port(st, en)
+            ips = get_ip_list()
+            start = start_port_box.get()
+            end = end_port_box.get()
+            disable_inputs()
+            set_status_box(running)
+            iterate_lan_scan(ips, start, end)
+            set_status_box(completed)
+            enable_inputs()
 
-            if cp == -1 | cip == -1:
-                return
-            else:
-                disable_inputs()
-                wan_scan(i, st, en)
+        def iterate_lan_scan(iplist, start, end):
+            for ip in iplist:
+                lan_scan(ip, start, end)
 
         def set_start_port_box(text):
             start_port_box.delete(0, END)
@@ -207,19 +215,7 @@ class PageOne(tk.Frame):
             ips = map_n.map_network()
             return ips
 
-        def start_multi_search():
-            ips = get_ip_list()
-            start = start_port_box.get()
-            end = end_port_box.get()
-            iterate_lan_scan(ips, start, end)
-
-        def iterate_lan_scan(iplist, start, end):
-            for ip in iplist:
-                lan_scan(ip, start, end)
-
         def lan_scan(remote_ip, start, end):
-            disable_inputs()
-            set_status_box(running)
 
             # Check what time the scan started
             t1 = datetime.now()
@@ -276,8 +272,6 @@ class PageOne(tk.Frame):
             # Calculates the difference of time, to see how long it took to run the script
             total = t2 - t1
             print(total)
-            enable_inputs()
-            set_status_box(completed)
 
         def progress_math(start_port, end_port):
             frac = int(end_port) - int(start_port) + 1
@@ -289,8 +283,8 @@ class PageOne(tk.Frame):
             ip_box.insert(0, ip)
             return
 
-        def get_external_ip():
-            ip = get_remote_server_ip()
+        def get_internal_ip():
+            ip = map_n.get_my_ip()
             set_ip_box(ip)
             set_start_port_box(1)
             set_end_port_box(65535)
@@ -298,7 +292,7 @@ class PageOne(tk.Frame):
         return_home = tk.Button(self, text="Back to Home", pady='8', command=lambda: controller.show_frame(StartPage))
         return_home.pack()
 
-        get_my_internal_ip = tk.Button(self, text="Get My Internal IP", pady='8', command=get_external_ip)
+        get_my_internal_ip = tk.Button(self, text="Get My Internal IP", pady='8', command=get_internal_ip)
 
         ip_box = Entry(self, width=16)
         start_port_box = Entry(self, width=5)
@@ -323,8 +317,11 @@ class PageOne(tk.Frame):
 
         set_status_box(ready)
 
-        start_scan = tk.Button(self, text="Start Scan", pady='8', command=start)
-        start_scan.place(x=280, y=280)
+        start_multi_scan = tk.Button(self, text="Start Multi Scan", pady='8', command=start_multi_search)
+        start_multi_scan.place(x=180, y=280)
+
+        start_single_scan = tk.Button(self, text="Start Single Scan", pady='8', command=start_single_search)
+        start_single_scan.place(x=380, y=280)
 
         port_results = ttk.Treeview(self)
         port_results.pack(fill=X, padx='10', side='bottom')

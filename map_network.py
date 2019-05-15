@@ -26,7 +26,6 @@ def get_my_ip():
     s.connect(("8.8.8.8", 80))
     ip = s.getsockname()[0]
     s.close()
-    print('My IP: ' + ip)
     return ip
 
 
