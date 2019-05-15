@@ -156,13 +156,13 @@ def wan_scan(remote_ip, start, end):
     try:
         for port_scan in range(int(start), int(end)):
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            result = sock.connect_ex((remote_ip, port_scan))
-            # cp_res = connected_ports(remote_ip, port_scan)
+            # result = sock.connect_ex((remote_ip, port_scan))
+            cp_res = connected_ports(remote_ip, port_scan)
             # TODO Fix progress bar as it does not work, or sometimes hangs the program
             bar['value'] += res
             bar.update()
 
-            if result == 0:
+            if cp_res == 0:
                 query = querysql(port_scan)
                 if query == -1:
                     ui_console.insert(INSERT, 'SQL Failed\n')
@@ -269,10 +269,10 @@ def connected_ports(ip, port):
 
     output = requests.post('http://www.ipfingerprints.com/scripts/getPortsInfo.php', data=data)
     if 'open ' in output.text:
-        return output
+        return 0
     else:
         print("port is closed.")
-        return False
+        return -1
 
 
 def insert_into_tree(ip, port, service, protocol, vulnerability):
