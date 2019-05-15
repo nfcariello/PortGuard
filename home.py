@@ -1,9 +1,14 @@
 import tkinter as tk
 from tkinter import *
 from PIL import ImageTk, Image
+import tkinter.ttk as ttk
 
 LARGE_FONT = ("Verdana", 25)
 background_color = '#3a3e44'
+
+
+def scan():
+    print('scan')
 
 
 class MainApplication(tk.Tk):
@@ -61,9 +66,8 @@ class PageOne(tk.Frame):
         label = tk.Label(self, text="Scan My Network", font=LARGE_FONT)
         label.pack(pady=10, padx=10)
 
-        button1 = tk.Button(self, text="Back to Home", pady='10',
-                            command=lambda: controller.show_frame(StartPage))
-        button1.pack()
+        return_home = tk.Button(self, text="Back to Home", pady='5', command=lambda: controller.show_frame(StartPage))
+        return_home.pack()
 
 
 class PageTwo(tk.Frame):
@@ -73,9 +77,44 @@ class PageTwo(tk.Frame):
         label = tk.Label(self, text="Scan My External IP", font=LARGE_FONT)
         label.pack(pady=10, padx=10)
 
-        button1 = tk.Button(self, text="Back to Home", pady='10',
-                            command=lambda: controller.show_frame(StartPage))
-        button1.pack()
+        return_home = tk.Button(self, text="Back to Home", pady='8', command=lambda: controller.show_frame(StartPage))
+        return_home.pack()
+
+        get_my_external_ip = tk.Button(self, text="Get My External IP", pady='8')
+
+        ip_box = Entry(self, width=16)
+        start_port_box = Entry(self, width=5)
+        end_port_box = Entry(self, width=5)
+        ip_label = Label(self, text='IP:')
+        start_port_label = Label(self, text='Starting Port:')
+        end_port_label = Label(self, text='Ending Port:')
+        #
+        ip_label.place(x=220, y=101)
+        ip_box.place(x=250, y=100)
+
+        get_my_external_ip.place(x=260, y=140)
+
+        start_port_label.place(x=240, y=191)
+        start_port_box.place(x=340, y=190)
+        end_port_label.place(x=240, y=231)
+        end_port_box.place(x=340, y=230)
+
+        start_scan = tk.Button(self, text="Start Scan", pady='8', command=scan)
+        start_scan.place(x=280, y=280)
+
+        port_results = ttk.Treeview(self)
+        port_results.pack(fill=X, padx='10', side='bottom')
+        port_results['columns'] = ('status', 'service', 'protocol', 'vulnerability')
+        port_results.heading('#0', text='Port', anchor='w')
+        port_results.column('#0', anchor='center', width=13)
+        port_results.heading('status', text='Status')
+        port_results.column('status', anchor='center', width=20)
+        port_results.heading('service', text='Service')
+        port_results.column('service', anchor='center', width=100)
+        port_results.heading('protocol', text='Protocol')
+        port_results.column('protocol', anchor='center', width=10)
+        port_results.heading('vulnerability', text='Vulnerability')
+        port_results.column('vulnerability', anchor='center', width=100)
 
 
 app = MainApplication()
@@ -85,7 +124,6 @@ windowWidth = app.winfo_reqwidth()
 windowHeight = app.winfo_reqheight()
 positionRight = int(app.winfo_screenwidth() / 3 - windowWidth / 3)
 positionDown = int(app.winfo_screenheight() / 3 - windowHeight / 3)
-print("Width", windowWidth, "Height", windowHeight)
 app.geometry("+{}+{}".format(positionRight, positionDown))
 app.configure(background='#3a3e44')
 app.resizable(False, False)
